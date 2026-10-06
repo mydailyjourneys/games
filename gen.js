@@ -16,13 +16,12 @@ function rng(seed) {
 function counts(s) { const m = {}; for (const c of s) m[c] = (m[c] || 0) + 1; return m; }
 function fits(word, cm) { const m = {}; for (const c of word) { m[c] = (m[c] || 0) + 1; if (m[c] > (cm[c] || 0)) return false; } return true; }
 
-function params(level) {
+function params(level, diff) {
+  if (diff === 'easy') return { L: level <= 10 ? 4 : level <= 60 ? 5 : 6, maxRank: Math.min(A.length, 1500 + level * 15), maxWords: Math.min(6, 3 + Math.floor(level / 12)) };
+  if (diff === 'hard') return { L: level <= 5 ? 5 : level <= 25 ? 6 : 7, maxRank: Math.min(A.length, 5000 + level * 60), maxWords: Math.min(10, 5 + Math.floor(level / 6)) };
   const L = level <= 6 ? 4 : level <= 30 ? 5 : level <= 90 ? 6 : 7;
-  const maxRank = Math.min(A.length, 2500 + level * 35);
-  const maxWords = Math.min(9, 3 + Math.floor(level / 8) + (L - 4));
-  return { L, maxRank, maxWords };
+  return { L, maxRank: Math.min(A.length, 2500 + level * 35), maxWords: Math.min(9, 3 + Math.floor(level / 8) + (L - 4)) };
 }
-
 // בניית תשבץ: מחזיר רשימת מילים ממוקמות או null
 function layout(words, rnd) {
   const grid = new Map(); // "x,y" -> {c, fin}
@@ -92,10 +91,11 @@ function layout(words, rnd) {
 }
 
 const CACHE = {};
-function makeLevel(level) {
-  if (CACHE[level]) return CACHE[level];
-  const rnd = rng(level * 7919 + 13);
-  const { L, maxRank, maxWords } = params(level);
+function makeLevel(level, diff = 'mid') {
+  const ck = diff + level;
+  if (CACHE[ck]) return CACHE[ck];
+  const rnd = rng(level * 7919 + 13 + (diff === 'easy' ? 101 : diff === 'hard' ? 202 : 0));
+  const { L, maxRank, maxWords } = params(level, diff);
   const pool = (BY_LEN[L] || []).filter(o => o.r < maxRank);
   let bestLv = null;
   for (let attempt = 0; attempt < 60; attempt++) {
@@ -125,7 +125,7 @@ function makeLevel(level) {
   }
   bestLv.words.forEach(p => { p.x -= x0; p.y -= y0; });
   bestLv.W = x1 - x0 + 1; bestLv.H = y1 - y0 + 1;
-  return (CACHE[level] = bestLv);
+  return (CACHE[ck] = bestLv);
 }
 function isBonusWord(n) { return SET_B.has(n); }
 if (typeof module !== 'undefined') module.exports = { makeLevel, norm, isBonusWord, TOFIN };

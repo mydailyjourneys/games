@@ -119,6 +119,17 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:Rubik,"Arial Hebrew",
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 .side{top:0;bottom:8px;justify-content:space-between}
 #codeIn{width:100%;font:700 28px Rubik,sans-serif;padding:12px;border-radius:14px;border:2px solid #d8cdb5;text-align:center;letter-spacing:2px;touch-action:auto;user-select:text;-webkit-user-select:text}
+
+#diffRow{display:flex;gap:8px;padding:10px 0 4px}
+#diffRow button{flex:1;border:2px solid #d8cdb5;background:#fff;border-radius:14px;font:800 24px Rubik,sans-serif;padding:12px 0;color:#334;cursor:pointer}
+#diffRow button.on{background:var(--fill);border-color:var(--fill);color:#fff}
+.photo{aspect-ratio:auto;background:#1d2430;display:grid;place-items:center;overflow:hidden}
+.photo:before{content:"";position:absolute;inset:-20px;background:var(--ph) center/cover;filter:blur(18px) brightness(.7)}
+.photo img{position:relative;width:100%;height:auto;max-height:46vh;object-fit:contain;animation:fadein .8s ease-out}
+@keyframes fadein{from{opacity:0;transform:scale(.96)}}
+#bg .phb{position:absolute;inset:-30px;background-size:cover;background-position:center;filter:blur(22px) brightness(.75)}
+#bg .ph{background-size:contain!important;background-repeat:no-repeat;animation:none!important}
+.album img{object-fit:contain;background:#1d2430}
 </style>
 </head>
 <body>
@@ -159,6 +170,8 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:Rubik,"Arial Hebrew",
 </div></div>
 <div class="ov" id="menuOv"><div class="card">
   <h2>הגדרות</h2>
+  <div class="row"><span>רמת קושי</span></div>
+  <div id="diffRow"><button data-d="easy">קל</button><button data-d="mid">בינוני</button><button data-d="hard">קשה</button></div>
   <div class="row"><span>צלילים</span><div class="sw" id="sndSw"></div></div>
   <div class="row"><span>רטט</span><div class="sw" id="vibSw"></div></div>
   <div class="row"><span>אותיות גדולות</span><div class="sw" id="bigSw"></div></div>

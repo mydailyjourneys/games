@@ -63,7 +63,7 @@ function drawBg(lv) {
   const t = theme(lv), ch = chapter(lv);
   document.documentElement.style.setProperty('--fill', t.fill);
   document.querySelector('meta[name=theme-color]').content = t.sky[0];
-  if (PH.length) { $('bg').innerHTML = `<div class="ph" style="background-image:url('${PH[(ch * 5) % PH.length]}')"></div>`; return; }
+  if (PH.length) { const u = PH[(ch * 5) % PH.length]; $('bg').innerHTML = `<div class="phb" style="background-image:url('${u}')"></div><div class="ph" style="background-image:url('${u}')"></div>`; return; }
   let stars = '';
   if (t.night) for (let i = 0; i < 60; i++) stars += `<circle cx="${(i * 97) % 400}" cy="${(i * 53) % 420}" r="${(i % 3) * 0.6 + 0.6}" fill="#fff" opacity="${0.4 + (i % 5) / 8}"/>`;
   $('bg').innerHTML = `<svg viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.sky[0]}"/><stop offset="1" stop-color="${t.sky[1]}"/></linearGradient></defs>
@@ -73,7 +73,7 @@ function drawBg(lv) {
 
 // ---- מצב ----
 const KEY = 'milim-v1';
-let S = { level: 1, coins: 200, found: [], cells: [], bonus: [], jar: 0, snd: true, vib: true, big: true, total: 0, gift: '' };
+let S = { level: 1, coins: 200, found: [], cells: [], bonus: [], jar: 0, snd: true, vib: true, big: true, diff: 'mid', total: 0, gift: '' };
 try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
@@ -136,7 +136,7 @@ let LV, cellMap, cellEls, sz = 50;
 function startLevel(lv, fresh) {
   if (fresh) { S.found = []; S.cells = []; S.bonus = []; }
   S.level = lv; save();
-  LV = makeLevel(lv);
+  LV = makeLevel(lv, S.diff || 'mid');
   drawBg(lv);
   $('lvlname').textContent = 'שלב ' + lv;
   $('chap').textContent = theme(lv).n + ' · ' + (((lv - 1) % LPC) + 1) + '/' + LPC;
@@ -209,7 +209,7 @@ function checkWin() {
     const reward = 10 + (lv % 5 === 0 ? 20 : 0) + (endChap ? 50 : 0);
     S.pendingReward = reward; S.done = Math.max(S.done || 0, lv); save();
     $('winT').textContent = CHEERS[lv % CHEERS.length];
-    $('winPhoto').innerHTML = PH.length ? `<div class="photo"><img src="${PH[(lv - 1) % PH.length]}" alt=""><div class="shine"></div></div>` : '';
+    $('winPhoto').innerHTML = PH.length ? `<div class="photo" style="--ph:url('${PH[(lv - 1) % PH.length]}')"><img src="${PH[(lv - 1) % PH.length]}" alt=""><div class="shine"></div></div>` : '';
     $('winP').innerHTML = (endChap ? `סיימת את הפרק "${theme(lv).n}"! 🎉<br>` : '') + (PH.length && lv <= PH.length ? 'תמונה חדשה נוספה לאלבום<br>' : '') + `קיבלת <b>${reward}</b> מטבעות`;
     SFX.win(); vib([40, 60, 40, 60, 80]); confetti(); $('winOv').classList.add('show');
   }, 500);
@@ -389,7 +389,14 @@ $('closeAlbum').onclick = () => $('albumOv').classList.remove('show');
 // ---- תפריט ----
 const sw = (id, key, cb) => { const el = $(id); el.classList.toggle('on', !!S[key]); el.onclick = () => { S[key] = !S[key]; el.classList.toggle('on', S[key]); save(); cb && cb(); }; };
 sw('sndSw', 'snd'); sw('vibSw', 'vib'); sw('bigSw', 'big', () => { buildWheel(); buildBoard(); });
-$('menuBtn').onclick = () => { $('stTotal').textContent = S.total; $('menuOv').classList.add('show'); };
+const DIFFN = { easy: 'קל', mid: 'בינוני', hard: 'קשה' };
+function showDiff() { document.querySelectorAll('#diffRow button').forEach(b => b.classList.toggle('on', b.dataset.d === (S.diff || 'mid'))); }
+document.querySelectorAll('#diffRow button').forEach(b => b.onclick = () => {
+  if (S.diff === b.dataset.d) return;
+  S.diff = b.dataset.d; save(); showDiff(); winShown = false;
+  startLevel(S.level, true); toast('רמת קושי: ' + DIFFN[S.diff]);
+});
+$('menuBtn').onclick = () => { showDiff(); $('stTotal').textContent = S.total; $('menuOv').classList.add('show'); };
 $('closeMenu').onclick = () => $('menuOv').classList.remove('show');
 $('nextBtn').onclick = () => {
   const r = $('nextBtn').getBoundingClientRect();
