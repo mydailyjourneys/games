@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#2b5876">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="מילים">
+<title>מילים</title>
+<!--MANIFEST-->
+<style>
+/*FONTS*/
+:root{--cell:#fffdf7;--cellb:#e9e1cf;--fill:#3b6fd8;--fillt:#fff;--ink:#22303c;--gold:#ffc83d;--shadow:0 4px 14px rgba(0,0,0,.18)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:none}
+html,body{margin:0;height:100%;overflow:hidden;font-family:Rubik,"Arial Hebrew",Arial,sans-serif;color:var(--ink);background:#2b5876}
+#bg{position:fixed;inset:0;z-index:0;transition:opacity .8s}
+#bg svg{width:100%;height:100%;display:block}
+#app{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.top{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:8px}
+.pill{background:rgba(0,0,0,.35);color:#fff;border-radius:22px;padding:6px 14px 6px 10px;font-weight:700;font-size:20px;display:flex;align-items:center;gap:6px;backdrop-filter:blur(4px)}
+.coin{width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#ffc83d 45%,#d18f00);box-shadow:inset 0 -2px 0 rgba(0,0,0,.2);display:inline-block}
+.ibtn{width:46px;height:46px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:24px;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(4px)}
+.lvl{color:#fff;font-weight:800;font-size:22px;text-shadow:0 2px 6px rgba(0,0,0,.4);text-align:center;line-height:1.1}
+.lvl small{display:block;font-size:14px;font-weight:500;opacity:.9}
+#board{flex:1 1 auto;position:relative;margin:4px 10px}
+.cell{position:absolute;border-radius:10%;background:var(--cell);box-shadow:inset 0 -3px 0 var(--cellb),0 2px 6px rgba(0,0,0,.15);display:grid;place-items:center;font-weight:800;color:var(--fillt);transition:background .25s,transform .25s}
+.cell span{opacity:0;transform:scale(.3);transition:all .3s cubic-bezier(.3,1.6,.5,1)}
+.cell.on{background:var(--fill);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2),0 2px 6px rgba(0,0,0,.2)}
+.cell.on span{opacity:1;transform:scale(1)}
+.cell.hint{background:#f2a33a}
+.cell.pick{animation:pulse 1s infinite;cursor:pointer}
+@keyframes pulse{50%{transform:scale(1.08);background:#ffe9a8}}
+.cell.pop{animation:pop .45s}
+@keyframes pop{40%{transform:scale(1.18)}}
+#preview{height:54px;display:flex;justify-content:center;align-items:center}
+#preview .w{background:var(--fill);color:#fff;font-weight:800;font-size:32px;padding:4px 18px;border-radius:14px;box-shadow:var(--shadow);letter-spacing:2px;min-width:20px}
+#preview .w.ok{background:#2fb36a}#preview .w.bad{background:#d9534f;animation:shake .4s}#preview .w.dup{background:#9a8b6c;animation:shake .4s}#preview .w.bonus{background:#e0a100}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.bottom{position:relative;display:flex;justify-content:center;align-items:center;padding-bottom:12px}
+#wheel{position:relative;border-radius:50%;background:rgba(255,255,255,.88);box-shadow:var(--shadow)}
+#wheel svg{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.lt{position:absolute;border-radius:50%;display:grid;place-items:center;font-weight:800;color:var(--ink);transition:background .15s,color .15s,transform .15s}
+.lt.sel{background:var(--fill);color:#fff;transform:scale(1.08)}
+#shuf{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;border:0;background:rgba(0,0,0,.06);font-size:28px;color:#667;cursor:pointer}
+.side{position:absolute;bottom:20px;display:flex;flex-direction:column;gap:14px}
+.side.r{right:12px}.side.l{left:12px}
+.tool{width:62px;height:62px;border-radius:50%;border:0;background:rgba(20,30,45,.75);color:#fff;font-size:28px;position:relative;cursor:pointer;box-shadow:var(--shadow)}
+.tool .p{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:#fff;color:#333;border-radius:10px;font-size:13px;font-weight:800;padding:1px 7px;white-space:nowrap;display:flex;gap:3px;align-items:center}
+.tool .p .coin{width:12px;height:12px}
+#jar .bar{position:absolute;inset:auto 8px 9px 8px;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden}
+#jar .bar i{display:block;height:100%;background:var(--gold);width:0;transition:width .4s}
+.ov{position:fixed;inset:0;z-index:10;background:rgba(10,20,35,.55);display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.ov.show{display:flex}
+.card{background:#fffdf7;border-radius:26px;padding:26px 22px;width:min(92vw,400px);text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.35);animation:rise .4s cubic-bezier(.3,1.4,.5,1)}
+@keyframes rise{from{transform:translateY(40px) scale(.9);opacity:0}}
+.card h2{margin:4px 0 10px;font-size:34px}
+.card p{font-size:20px;margin:8px 0;line-height:1.4}
+.big{border:0;border-radius:18px;background:linear-gradient(#4f8cf0,#2e62c9);color:#fff;font:800 26px Rubik,sans-serif;padding:14px 30px;margin-top:14px;box-shadow:0 5px 0 #1f4593;cursor:pointer;width:100%}
+.big.alt{background:linear-gradient(#f3f0e8,#ddd6c6);color:#334;box-shadow:0 5px 0 #b9b09c}
+.big:active{transform:translateY(3px);box-shadow:0 2px 0 #1f4593}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:21px;padding:12px 4px;border-bottom:1px solid #eee5d3}
+.sw{width:58px;height:32px;border-radius:16px;background:#ccc;position:relative;transition:.2s}
+.sw:after{content:"";position:absolute;top:3px;right:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:#2fb36a}.sw.on:after{right:29px}
+.words-list{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-height:40vh;overflow:auto;touch-action:pan-y}
+.words-list b{background:#f0e6cf;border-radius:10px;padding:4px 10px;font-size:19px}
+#toast{position:fixed;top:20%;left:50%;transform:translateX(-50%);z-index:20;background:rgba(0,0,0,.75);color:#fff;font-size:22px;font-weight:700;padding:10px 22px;border-radius:16px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1}
+.fly{position:fixed;z-index:30;pointer-events:none;transition:all .7s cubic-bezier(.5,0,.3,1)}
+#confetti{position:fixed;inset:0;z-index:9;pointer-events:none}
+.stars{font-size:46px;letter-spacing:6px;color:var(--gold);text-shadow:0 2px 0 #c08a00}
+.title{font-size:58px;font-weight:800;color:#fff;text-shadow:0 4px 14px rgba(0,0,0,.35);margin:0}
+#home{background:linear-gradient(rgba(20,30,60,.35),rgba(20,30,60,.65));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);flex-direction:column;gap:14px}
+#home .tiles{display:flex;gap:8px;direction:rtl}
+#home .tiles span{width:56px;height:56px;border-radius:12px;background:var(--fill);color:#fff;display:grid;place-items:center;font-size:40px;font-weight:800;box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),var(--shadow);animation:bob 2.4s ease-in-out infinite}
+#home .tiles span:nth-child(2){animation-delay:.2s}#home .tiles span:nth-child(3){animation-delay:.4s}#home .tiles span:nth-child(4){animation-delay:.6s}#home .tiles span:nth-child(5){animation-delay:.8s}
+@keyframes bob{50%{transform:translateY(-10px)}}
+#home .big{width:min(80vw,320px)}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<canvas id="confetti"></canvas>
+<div id="app">
+  <div class="top">
+    <div class="pill"><span class="coin"></span><span id="coins">0</span></div>
+    <div class="lvl"><span id="lvlname">שלב 1</span><small id="chap"></small></div>
+    <button class="ibtn" id="menuBtn" aria-label="הגדרות">⚙</button>
+  </div>
+  <div id="board"></div>
+  <div id="preview"></div>
+  <div class="bottom">
+    <div class="side r">
+      <button class="tool" id="hintBtn" aria-label="רמז">💡<span class="p"><span class="coin"></span>40</span></button>
+      <button class="tool" id="pickBtn" aria-label="חשיפת משבצת">🎯<span class="p"><span class="coin"></span>70</span></button>
+    </div>
+    <div id="wheel"><svg id="line"></svg><button id="shuf" aria-label="ערבוב">⤮</button></div>
+    <div class="side l">
+      <button class="tool" id="jar" aria-label="מילים נוספות">⭐<span class="bar"><i></i></span><span class="p" id="jarN">0/10</span></button>
+      <button class="tool" id="wordBtn" aria-label="חשיפת מילה">📖<span class="p"><span class="coin"></span>150</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="ov show" id="home">
+  <div class="tiles"><span>מ</span><span>י</span><span>ל</span><span>י</span><span>ם</span></div>
+  <p class="title">משחק מילים</p>
+  <button class="big" id="playBtn">לשחק</button>
+</div>
+<div class="ov" id="winOv"><div class="card">
+  <div class="stars">★★★</div><h2 id="winT">כל הכבוד!</h2>
+  <p id="winP"></p>
+  <button class="big" id="nextBtn">לשלב הבא</button>
+</div></div>
+<div class="ov" id="menuOv"><div class="card">
+  <h2>הגדרות</h2>
+  <div class="row"><span>צלילים</span><div class="sw" id="sndSw"></div></div>
+  <div class="row"><span>רטט</span><div class="sw" id="vibSw"></div></div>
+  <div class="row"><span>אותיות גדולות</span><div class="sw" id="bigSw"></div></div>
+  <div class="row"><span>מילים שנפתרו</span><span id="stTotal">0</span></div>
+  <button class="big" id="closeMenu">חזרה למשחק</button>
+</div></div>
+<div class="ov" id="jarOv"><div class="card">
+  <h2>⭐ מילים נוספות</h2>
+  <p>מילים אמיתיות שלא בתשבץ. כל 10 מילים — 50 מטבעות!</p>
+  <div class="words-list" id="jarList"></div>
+  <button class="big" id="closeJar">סגירה</button>
+</div></div>
+<div class="ov" id="giftOv"><div class="card">
+  <div class="stars">🎁</div><h2>מתנה יומית</h2>
+  <p>בוקר טוב! הנה 100 מטבעות במתנה.</p>
+  <button class="big" id="giftBtn">תודה!</button>
+</div></div>
+<div id="toast"></div>
+
+<script>
+/*WORDS*/
+/*GEN*/
+/*GAME*/
+</script>
+</body>
+</html>
