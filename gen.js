@@ -79,7 +79,7 @@ function layout(words, rnd) {
             if (c < 1) continue;
             const ex = [[x, y], [x + (dir === 'h' ? o.n.length - 1 : 0), y + (dir === 'v' ? o.n.length - 1 : 0)]];
             const b = bbox(ex);
-            if (b.w > 8 || b.h > 9) continue;
+            if (b.w > 7 || b.h > 8) continue;
             const score = c * 10 - Math.abs(b.w - b.h) - (b.w * b.h) / 12 + rnd();
             if (!best || score > best.score) best = { x, y, dir, score };
           }
