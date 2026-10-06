@@ -1,6 +1,41 @@
 (() => {
 const $ = id => document.getElementById(id);
-const PH = (typeof PHOTOS !== 'undefined' && PHOTOS) || [];
+let PH = [];
+// ---- תמונות נעולות בקוד ----
+const PKEY = 'milim-photokey';
+async function deriveKey(code, salt) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveBits']);
+  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 200000 }, base, 256));
+}
+let DAT = null;
+async function getDat() {
+  if (!DAT) { const r = await fetch('photos.txt'); if (!r.ok) throw new Error('no photos'); const t = (await r.text()).trim(); const bin = atob(t); DAT = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) DAT[i] = bin.charCodeAt(i); }
+  return DAT;
+}
+async function unlock(code) {
+  const d = await getDat(), dv = new DataView(d.buffer);
+  const salt = d.slice(4, 20);
+  let raw = null;
+  if (code) raw = await deriveKey(code, salt);
+  else { try { const s = localStorage.getItem(PKEY); if (s) raw = Uint8Array.from(atob(s), c => c.charCodeAt(0)); } catch (e) {} }
+  if (!raw) return false;
+  const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+  const n = dv.getUint32(20, true); let o = 24; const urls = [];
+  for (let i = 0; i < n; i++) {
+    const iv = d.slice(o, o + 12), len = dv.getUint32(o + 12, true), ct = d.slice(o + 16, o + 16 + len); o += 16 + len;
+    try { const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct); urls.push(URL.createObjectURL(new Blob([pt], { type: 'image/jpeg' }))); }
+    catch (e) { if (i === 0) { try { localStorage.removeItem(PKEY); } catch (_) {} return false; } }
+  }
+  PH = urls;
+  try { localStorage.setItem(PKEY, btoa(String.fromCharCode(...raw))); } catch (e) {}
+  if (LV) drawBg(S.level);
+  return true;
+}
+async function initPhotos() {
+  const h = decodeURIComponent((location.hash || '').slice(1)).trim();
+  if (h) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+  try { if (h && await unlock(h)) return; await unlock(); } catch (e) {}
+}
 const THEMES = [
   { n: 'זריחה', sky: ['#ffb88c', '#de6262'], hills: ['#9b4d6b', '#6f3a5c', '#4a2847'], sun: '#ffe7a0', fill: '#c2456b' },
   { n: 'שמיים כחולים', sky: ['#56ccf2', '#2f80ed'], hills: ['#6fcf97', '#27ae60', '#1e8449'], sun: '#fff6c8', fill: '#2e62c9' },
@@ -335,12 +370,20 @@ $('closeJar').onclick = () => $('jarOv').classList.remove('show');
 // ---- אלבום ----
 $('albumBtn').onclick = () => {
   const done = S.done || S.level - 1, open = Math.min(PH.length, done);
-  $('albumP').textContent = PH.length ? `${open} מתוך ${PH.length} תמונות. כל שלב פותח תמונה חדשה.` : 'התמונות יתווספו בקרוב.';
+  $('albumP').textContent = PH.length ? `${open} מתוך ${PH.length} תמונות. כל שלב פותח תמונה חדשה.` : 'התמונות נעולות. הקלידי את הקוד המשפחתי:';
+  $('codeRow').hidden = !!PH.length;
   $('albumGrid').innerHTML = PH.map((src, i) => i < open ? `<img src="${src}" data-i="${i}" alt="">` : '<div>🔒</div>').join('');
   $('menuOv').classList.remove('show'); $('albumOv').classList.add('show');
 };
 $('albumGrid').onclick = e => { const i = e.target.dataset && e.target.dataset.i; if (i !== undefined) { $('viewerImg').src = PH[i]; $('viewer').classList.add('show'); } };
 $('viewer').onclick = () => $('viewer').classList.remove('show');
+$('codeBtn').onclick = async () => {
+  const c = $('codeIn').value.trim().toLowerCase(); if (!c) return;
+  $('codeBtn').textContent = '...';
+  let ok = false; try { ok = await unlock(c); } catch (e) {}
+  $('codeBtn').textContent = 'פתיחה';
+  if (ok) { SFX.bonus(); toast('📷 התמונות נפתחו!'); $('albumBtn').onclick(); } else { SFX.bad(); toast('הקוד לא נכון'); }
+};
 $('closeAlbum').onclick = () => $('albumOv').classList.remove('show');
 
 // ---- תפריט ----
@@ -389,6 +432,7 @@ $('playBtn').onclick = () => {
 $('giftBtn').onclick = () => { $('giftOv').classList.remove('show'); flyCoins($('giftBtn').getBoundingClientRect(), 100); };
 $('playBtn').textContent = S.level > 1 ? 'להמשיך · שלב ' + S.level : 'לשחק';
 startLevel(S.level, false);
+initPhotos();
 let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { buildWheel(); buildBoard(); }, 150); });
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();

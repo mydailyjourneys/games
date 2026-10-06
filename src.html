@@ -118,6 +118,7 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:Rubik,"Arial Hebrew",
 #bg .ph:after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.05) 40%,rgba(0,0,0,.45))}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 .side{top:0;bottom:8px;justify-content:space-between}
+#codeIn{width:100%;font:700 28px Rubik,sans-serif;padding:12px;border-radius:14px;border:2px solid #d8cdb5;text-align:center;letter-spacing:2px;touch-action:auto;user-select:text;-webkit-user-select:text}
 </style>
 </head>
 <body>
@@ -178,6 +179,7 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:Rubik,"Arial Hebrew",
 <div class="ov" id="albumOv"><div class="card">
   <h2>📷 האלבום שלי</h2>
   <p id="albumP"></p>
+  <div id="codeRow" hidden><input id="codeIn" autocomplete="off" autocapitalize="off" spellcheck="false" dir="ltr" placeholder="קוד"><button class="big" id="codeBtn">פתיחה</button></div>
   <div class="album" id="albumGrid"></div>
   <button class="big" id="closeAlbum">סגירה</button>
 </div></div>
@@ -187,7 +189,6 @@ html,body{margin:0;height:100%;overflow:hidden;font-family:Rubik,"Arial Hebrew",
 
 <script>
 /*WORDS*/
-/*PHOTOS*/
 /*GEN*/
 /*GAME*/
 </script>

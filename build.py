@@ -9,17 +9,7 @@ for w in (500,700,800):
 s=s.replace('/*FONTS*/',f)
 s=s.replace('<!--MANIFEST-->','<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">')
 gen=open(f'{D}/gen.js',encoding='utf-8').read().replace("if (typeof module !== 'undefined') module.exports = { makeLevel, norm, isBonusWord, TOFIN };",'')
-import glob,io
-from PIL import Image,ImageOps
-ph=[]
-for fp in sorted(glob.glob(f'{D}/photos/*')):
-    try:
-        im=ImageOps.exif_transpose(Image.open(fp)).convert('RGB'); im.thumbnail((1100,1100))
-        bio=io.BytesIO(); im.save(bio,'JPEG',quality=74,optimize=True)
-        ph.append('data:image/jpeg;base64,'+base64.b64encode(bio.getvalue()).decode())
-    except Exception as e: print('skip',fp,e)
-s=s.replace('/*PHOTOS*/','const PHOTOS='+str(ph).replace("'",'"')+';')
-print('photos',len(ph))
+
 s=s.replace('/*WORDS*/',open(f'{D}/words.js',encoding='utf-8').read()).replace('/*GEN*/',gen).replace('/*GAME*/',open(f'{D}/game.js',encoding='utf-8').read())
 
 open(f'{D}/index.html','w',encoding='utf-8').write(s)
