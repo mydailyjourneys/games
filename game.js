@@ -434,5 +434,9 @@ $('playBtn').textContent = S.level > 1 ? 'להמשיך · שלב ' + S.level : '
 startLevel(S.level, false);
 initPhotos();
 let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { buildWheel(); buildBoard(); }, 150); });
+let installEv = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; $('installBtn').hidden = false; });
+addEventListener('appinstalled', () => { $('installBtn').hidden = true; toast('המשחק הותקן במסך הבית'); });
+$('installBtn').onclick = async () => { if (!installEv) return; installEv.prompt(); try { await installEv.userChoice; } catch (e) {} installEv = null; $('installBtn').hidden = true; };
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
