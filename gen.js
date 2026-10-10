@@ -17,10 +17,10 @@ function counts(s) { const m = {}; for (const c of s) m[c] = (m[c] || 0) + 1; re
 function fits(word, cm) { const m = {}; for (const c of word) { m[c] = (m[c] || 0) + 1; if (m[c] > (cm[c] || 0)) return false; } return true; }
 
 function params(level, diff) {
-  if (diff === 'easy') return { L: level <= 10 ? 4 : level <= 60 ? 5 : 6, maxRank: Math.min(A.length, 1500 + level * 15), maxWords: Math.min(6, 3 + Math.floor(level / 12)) };
-  if (diff === 'hard') return { L: level <= 5 ? 5 : level <= 25 ? 6 : 7, maxRank: Math.min(A.length, 5000 + level * 60), maxWords: Math.min(10, 5 + Math.floor(level / 6)) };
+  if (diff === 'easy') return { L: level <= 10 ? 4 : level <= 60 ? 5 : 6, maxRank: Math.min(A.length, 700 + level * 8), maxWords: Math.min(6, 3 + Math.floor(level / 12)) };
+  if (diff === 'hard') return { L: level <= 5 ? 5 : level <= 25 ? 6 : 7, maxRank: Math.min(A.length, 2200 + level * 30), maxWords: Math.min(10, 5 + Math.floor(level / 6)) };
   const L = level <= 6 ? 4 : level <= 30 ? 5 : level <= 90 ? 6 : 7;
-  return { L, maxRank: Math.min(A.length, 2500 + level * 35), maxWords: Math.min(9, 3 + Math.floor(level / 8) + (L - 4)) };
+  return { L, maxRank: Math.min(A.length, 1200 + level * 18), maxWords: Math.min(9, 3 + Math.floor(level / 8) + (L - 4)) };
 }
 // בניית תשבץ: מחזיר רשימת מילים ממוקמות או null
 function layout(words, rnd) {
@@ -101,11 +101,13 @@ function makeLevel(level, diff = 'mid') {
   for (let attempt = 0; attempt < 60; attempt++) {
     const base = pool[Math.floor(rnd() * pool.length)];
     const cm = counts(base.n);
-    const cands = A.filter(o => o.n.length >= 3 && o.n.length <= L && o.r < maxRank * 1.6 && fits(o.n, cm));
+    const SHORT = { 3: 900, 4: 2200 };
+    const cands = A.filter(o => o.n.length >= 3 && o.n.length <= L && o.r < Math.min(maxRank * 1.6, SHORT[o.n.length] || 1e9) && fits(o.n, cm));
     const uniq = []; const seen = new Set();
     for (const o of cands) if (!seen.has(o.n)) { seen.add(o.n); uniq.push(o); }
     if (uniq.length < Math.min(4, maxWords)) continue;
-    const others = uniq.filter(o => o.n !== base.n).sort((a, b) => (b.n.length - a.n.length) || (a.r - b.r));
+    const jit = new Map(); const q = o => { if (!jit.has(o)) jit.set(o, 0.5 + rnd()); return (o.r + 60) * jit.get(o) * (o.n.length === 3 ? 2.5 : 1) / (1 + 0.25 * (o.n.length - 3)); };
+    const others = uniq.filter(o => o.n !== base.n).sort((a, b) => q(a) - q(b));
     // מגוון: חלק מהמילים הארוכות, השאר לפי שכיחות
     const chosen = [base, ...others.slice(0, maxWords * 2)];
     const placed = layout(chosen, rnd).slice(0, maxWords + 1);

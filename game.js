@@ -137,6 +137,8 @@ function startLevel(lv, fresh) {
   if (fresh) { S.found = []; S.cells = []; S.bonus = []; }
   S.level = lv; save();
   LV = makeLevel(lv, S.diff || 'mid');
+  const sig = LV.words.map(w => w.n).join(',');
+  if (S.sig !== sig) { S.found = []; S.cells = []; S.bonus = []; S.sig = sig; save(); }
   drawBg(lv);
   $('lvlname').textContent = 'שלב ' + lv;
   $('chap').textContent = theme(lv).n + ' · ' + (((lv - 1) % LPC) + 1) + '/' + LPC;
@@ -221,11 +223,11 @@ function buildWheel() {
   const wh = $('wheel'); wh.querySelectorAll('.lt').forEach(e => e.remove());
   const D = Math.max(220, Math.min(innerWidth - 100, innerHeight * 0.42, 380)); wh.style.width = wh.style.height = D + 'px';
   const n = LV.wheel.length, R = D / 2, lr = Math.min(R * 0.36, (Math.PI * R * 0.68) / n);
-  slots = LV.wheel.map((_, i) => { const a = -Math.PI / 2 + (i * 2 * Math.PI) / n; return { x: R + Math.cos(a) * R * 0.66, y: R + Math.sin(a) * R * 0.66 }; });
+  slots = LV.wheel.map((_, i) => { const a = -Math.PI / 2 + (i * 2 * Math.PI) / n; return { x: R + Math.cos(a) * R * 0.7, y: R + Math.sin(a) * R * 0.7 }; });
   ptsPos = LV.wheel.map((ch, i) => {
     const el = document.createElement('div'); el.className = 'lt'; el.textContent = ch;
     const { x, y } = slots[i];
-    el.style.cssText = `width:${lr * 1.8}px;height:${lr * 1.8}px;left:${x - lr * 0.9}px;top:${y - lr * 0.9}px;font-size:${lr * (S.big ? 1.5 : 1.25)}px`;
+    el.style.cssText = `width:${lr * 1.6}px;height:${lr * 1.6}px;left:${x - lr * 0.8}px;top:${y - lr * 0.8}px;font-size:${lr * (S.big ? 1.5 : 1.25)}px`;
     wh.appendChild(el); return { x, y, el, ch, r: lr };
   });
   $('line').setAttribute('viewBox', `0 0 ${D} ${D}`);
@@ -235,20 +237,20 @@ function drawLine(px, py) {
   const pts = sel.map(i => ptsPos[i]); let d = '';
   pts.forEach((p, i) => (d += (i ? 'L' : 'M') + p.x + ' ' + p.y + ' '));
   if (dragging && pts.length && px !== undefined) d += 'L' + px + ' ' + py;
-  $('line').innerHTML = d ? `<path d="${d}" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--fill')}" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>` : '';
+  $('line').innerHTML = d ? `<path d="${d}" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--fill')}" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>` : '';
   ptsPos.forEach((p, i) => p.el.classList.toggle('sel', sel.includes(i)));
   const w = sel.map(i => ptsPos[i].ch).join('');
   $('preview').innerHTML = w ? `<div class="w">${w}</div>` : '';
 }
-function hitTest(e) {
+function hitTest(e, rf = 0.55) {
   const r = $('wheel').getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-  for (let i = 0; i < ptsPos.length; i++) { const p = ptsPos[i]; if (Math.hypot(p.x - x, p.y - y) < p.r * 1.0) return { i, x, y }; }
+  for (let i = 0; i < ptsPos.length; i++) { const p = ptsPos[i]; if (Math.hypot(p.x - x, p.y - y) < p.r * rf) return { i, x, y }; }
   return { i: -1, x, y };
 }
 const wheel = $('wheel');
 wheel.addEventListener('pointerdown', e => {
   if (e.target.id === 'shuf') return;
-  const h = hitTest(e); if (h.i < 0) return;
+  const h = hitTest(e, 0.95); if (h.i < 0) return;
   dragging = true; sel = [h.i]; SFX.pick(0); vib(8); try { wheel.setPointerCapture(e.pointerId); } catch (_) {} drawLine(h.x, h.y);
 });
 wheel.addEventListener('pointermove', e => {
@@ -323,7 +325,7 @@ $('shuf').onclick = () => {
   }
   ptsPos.forEach((p, k) => {
     const s = slots[perm[k]]; p.x = s.x; p.y = s.y;
-    p.el.classList.add('spin'); p.el.style.left = s.x - p.r * 0.9 + 'px'; p.el.style.top = s.y - p.r * 0.9 + 'px';
+    p.el.classList.add('spin'); p.el.style.left = s.x - p.r * 0.8 + 'px'; p.el.style.top = s.y - p.r * 0.8 + 'px';
   });
   $('shuf').animate([{ transform: 'translate(-50%,-50%) rotate(0)' }, { transform: 'translate(-50%,-50%) rotate(360deg)' }], { duration: 500, easing: 'ease-out' });
   SFX.whoosh();
